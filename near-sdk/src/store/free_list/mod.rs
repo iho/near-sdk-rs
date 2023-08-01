@@ -6,7 +6,7 @@ use crate::{env, IntoStorageKey};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
-use std::{fmt, mem};
+use std::{fmt, io, mem};
 
 /// Index for value within a bucket.
 #[derive(BorshSerialize, BorshDeserialize, Debug, Hash, PartialEq, Eq, Clone, Copy)]
@@ -15,6 +15,7 @@ pub struct FreeListIndex(pub(crate) u32);
 /// Unordered container of values. This is similar to [`Vector`] except that values are not
 /// re-arranged on removal, keeping the indices consistent. When an element is removed, it will
 /// be replaced with an empty cell which will be populated on the next insertion.
+#[derive(Default)]
 pub(crate) struct FreeList<T>
 where
     T: BorshSerialize,
@@ -24,16 +25,22 @@ where
     elements: Vector<Slot<T>>,
 }
 
+impl<T: Default + BorshSerialize> Default for Vector<Slot<T>> {
+    fn default() -> Self {
+        Self {
+            values: super::IndexMap { prefix: Default::default(), cache: Default::default() },
+            len: 0,
+        }
+    }
+}
+
 //? Manual implementations needed only because borsh derive is leaking field types
 // https://github.com/near/borsh-rs/issues/41
 impl<T> BorshSerialize for FreeList<T>
 where
     T: BorshSerialize,
 {
-    fn serialize<W: borsh::maybestd::io::Write>(
-        &self,
-        writer: &mut W,
-    ) -> Result<(), borsh::maybestd::io::Error> {
+    fn serialize<W: io::Write>(&self, writer: &mut W) -> Result<(), io::Error> {
         BorshSerialize::serialize(&self.first_free, writer)?;
         BorshSerialize::serialize(&self.occupied_count, writer)?;
         BorshSerialize::serialize(&self.elements, writer)?;
@@ -45,12 +52,18 @@ impl<T> BorshDeserialize for FreeList<T>
 where
     T: BorshSerialize,
 {
-    fn deserialize(buf: &mut &[u8]) -> Result<Self, borsh::maybestd::io::Error> {
+    fn deserialize_reader<R: std::io::Read>(buf: &mut R) -> Result<Self, io::Error> {
         Ok(Self {
-            first_free: BorshDeserialize::deserialize(buf)?,
-            occupied_count: BorshDeserialize::deserialize(buf)?,
-            elements: BorshDeserialize::deserialize(buf)?,
+            first_free: BorshDeserialize::deserialize_reader(buf)?,
+            occupied_count: BorshDeserialize::deserialize_reader(buf)?,
+            elements: BorshDeserialize::deserialize_reader(buf)?,
         })
+    }
+}
+
+impl<T> Default for Slot<T> {
+    fn default() -> Self {
+        Slot::Empty { next_free: None }
     }
 }
 

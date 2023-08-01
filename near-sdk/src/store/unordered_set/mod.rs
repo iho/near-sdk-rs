@@ -78,17 +78,29 @@ use std::fmt;
 ///
 /// [`with_hasher`]: Self::with_hasher
 /// [`LookupSet`]: crate::store::LookupSet
-#[derive(BorshDeserialize, BorshSerialize)]
+#[derive(BorshDeserialize, BorshSerialize, Default)]
 pub struct UnorderedSet<T, H = Sha256>
 where
-    T: BorshSerialize + Ord,
+    T: BorshSerialize + Ord + Default,
     H: ToKey,
 {
     elements: FreeList<T>,
     index: LookupMap<T, FreeListIndex, H>,
 }
 
-impl<T, H> Drop for UnorderedSet<T, H>
+impl Default for FreeListIndex {
+    fn default() -> Self {
+        Self(0)
+    }
+}
+
+// impl<T: BorshSerialize + Ord + Default, H: ToKey> Default for UnorderedSet<T, H> {
+//     fn default() -> Self {
+//         Self { elements: FreeList::default(), index: LookupMap::default() }
+//     }
+// }
+
+impl<T: Default, H> Drop for UnorderedSet<T, H>
 where
     T: BorshSerialize + Ord,
     H: ToKey,
@@ -98,7 +110,7 @@ where
     }
 }
 
-impl<T, H> fmt::Debug for UnorderedSet<T, H>
+impl<T: Default, H> fmt::Debug for UnorderedSet<T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize + fmt::Debug,
     H: ToKey,
@@ -111,7 +123,7 @@ where
     }
 }
 
-impl<T> UnorderedSet<T, Sha256>
+impl<T: Default> UnorderedSet<T, Sha256>
 where
     T: BorshSerialize + Ord,
 {
@@ -136,7 +148,7 @@ where
     }
 }
 
-impl<T, H> UnorderedSet<T, H>
+impl<T: Default, H> UnorderedSet<T, H>
 where
     T: BorshSerialize + Ord,
     H: ToKey,

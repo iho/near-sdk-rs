@@ -1,7 +1,6 @@
-use borsh::BorshSerialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 use crate::env;
-
 mod private {
     /// Seal `ToKey` implementations to limit usage to the builtin implementations
     pub trait Sealed {}
@@ -22,8 +21,11 @@ pub trait ToKey: self::private::Sealed {
 }
 
 /// Sha256 hash helper which hashes through a syscall. This type satisfies the [`ToKey`] trait.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub enum Sha256 {}
+#[derive(Debug, Clone, Copy, Eq, PartialEq, BorshSerialize, BorshDeserialize)]
+pub enum Sha256 {
+    /// Hash of the empty string.
+    Empty,
+}
 
 impl ToKey for Sha256 {
     type KeyType = [u8; 32];

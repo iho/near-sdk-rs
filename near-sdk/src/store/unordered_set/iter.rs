@@ -5,7 +5,7 @@ use crate::store::{free_list, LookupMap};
 use borsh::{BorshDeserialize, BorshSerialize};
 use std::iter::{Chain, FusedIterator};
 
-impl<'a, T, H> IntoIterator for &'a UnorderedSet<T, H>
+impl<'a, T: Default, H> IntoIterator for &'a UnorderedSet<T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize + Clone,
     H: ToKey,
@@ -31,7 +31,7 @@ where
     elements: free_list::Iter<'a, T>,
 }
 
-impl<'a, T> Iter<'a, T>
+impl<'a, T: Default> Iter<'a, T>
 where
     T: BorshSerialize + Ord + BorshDeserialize,
 {
@@ -90,7 +90,7 @@ where
 /// [`difference`]: UnorderedSet::difference
 pub struct Difference<'a, T, H>
 where
-    T: BorshSerialize + Ord + BorshDeserialize,
+    T: BorshSerialize + Ord + BorshDeserialize + Default,
     H: ToKey,
 {
     elements: free_list::Iter<'a, T>,
@@ -98,7 +98,7 @@ where
     other: &'a UnorderedSet<T, H>,
 }
 
-impl<'a, T, H> Difference<'a, T, H>
+impl<'a, T: Default, H> Difference<'a, T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize,
     H: ToKey,
@@ -108,7 +108,7 @@ where
     }
 }
 
-impl<'a, T, H> Iterator for Difference<'a, T, H>
+impl<'a, T: Default, H> Iterator for Difference<'a, T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize + Clone,
     H: ToKey,
@@ -129,7 +129,7 @@ where
     }
 }
 
-impl<'a, T, H> FusedIterator for Difference<'a, T, H>
+impl<'a, T: Default, H> FusedIterator for Difference<'a, T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize + Clone,
     H: ToKey,
@@ -142,7 +142,7 @@ where
 /// See its documentation for more.
 ///
 /// [`intersection`]: UnorderedSet::intersection
-pub struct Intersection<'a, T, H>
+pub struct Intersection<'a, T: Default, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize,
     H: ToKey,
@@ -152,7 +152,7 @@ where
     other: &'a UnorderedSet<T, H>,
 }
 
-impl<'a, T, H> Intersection<'a, T, H>
+impl<'a, T: Default, H> Intersection<'a, T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize,
     H: ToKey,
@@ -162,7 +162,7 @@ where
     }
 }
 
-impl<'a, T, H> Iterator for Intersection<'a, T, H>
+impl<'a, T: Default, H> Iterator for Intersection<'a, T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize + Clone,
     H: ToKey,
@@ -183,7 +183,7 @@ where
     }
 }
 
-impl<'a, T, H> FusedIterator for Intersection<'a, T, H>
+impl<'a, T: Default, H> FusedIterator for Intersection<'a, T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize + Clone,
     H: ToKey,
@@ -198,13 +198,13 @@ where
 /// [`symmetric_difference`]: UnorderedSet::symmetric_difference
 pub struct SymmetricDifference<'a, T, H>
 where
-    T: BorshSerialize + Ord + BorshDeserialize,
+    T: BorshSerialize + Ord + BorshDeserialize + Default,
     H: ToKey,
 {
     iter: Chain<Difference<'a, T, H>, Difference<'a, T, H>>,
 }
 
-impl<'a, T, H> SymmetricDifference<'a, T, H>
+impl<'a, T: Default, H> SymmetricDifference<'a, T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize + Clone,
     H: ToKey,
@@ -214,7 +214,7 @@ where
     }
 }
 
-impl<'a, T, H> Iterator for SymmetricDifference<'a, T, H>
+impl<'a, T: Default, H> Iterator for SymmetricDifference<'a, T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize + Clone,
     H: ToKey,
@@ -230,7 +230,7 @@ where
     }
 }
 
-impl<'a, T, H> FusedIterator for SymmetricDifference<'a, T, H>
+impl<'a, T: Default, H> FusedIterator for SymmetricDifference<'a, T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize + Clone,
     H: ToKey,
@@ -245,13 +245,13 @@ where
 /// [`union`]: UnorderedSet::union
 pub struct Union<'a, T, H>
 where
-    T: BorshSerialize + Ord + BorshDeserialize,
+    T: BorshSerialize + Ord + BorshDeserialize + Default,
     H: ToKey,
 {
     iter: Chain<Iter<'a, T>, Difference<'a, T, H>>,
 }
 
-impl<'a, T, H> Union<'a, T, H>
+impl<'a, T: Default, H> Union<'a, T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize + Clone,
     H: ToKey,
@@ -261,7 +261,7 @@ where
     }
 }
 
-impl<'a, T, H> Iterator for Union<'a, T, H>
+impl<'a, T: Default, H> Iterator for Union<'a, T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize + Clone,
     H: ToKey,
@@ -277,7 +277,7 @@ where
     }
 }
 
-impl<'a, T, H> FusedIterator for Union<'a, T, H>
+impl<'a, T: Default, H> FusedIterator for Union<'a, T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize + Clone,
     H: ToKey,
@@ -301,7 +301,7 @@ where
     index: &'a mut LookupMap<T, FreeListIndex, H>,
 }
 
-impl<'a, T, H> Drain<'a, T, H>
+impl<'a, T: Default, H> Drain<'a, T, H>
 where
     T: BorshSerialize + BorshDeserialize + Ord,
     H: ToKey,
@@ -315,7 +315,7 @@ where
     }
 }
 
-impl<'a, T, H> Iterator for Drain<'a, T, H>
+impl<'a, T: Default, H> Iterator for Drain<'a, T, H>
 where
     T: BorshSerialize + BorshDeserialize + Ord + Clone,
     H: ToKey,
@@ -338,21 +338,21 @@ where
     }
 }
 
-impl<'a, T, H> ExactSizeIterator for Drain<'a, T, H>
+impl<'a, T: Default, H> ExactSizeIterator for Drain<'a, T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize + Clone,
     H: ToKey,
 {
 }
 
-impl<'a, T, H> FusedIterator for Drain<'a, T, H>
+impl<'a, T: Default, H> FusedIterator for Drain<'a, T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize + Clone,
     H: ToKey,
 {
 }
 
-impl<'a, T, H> DoubleEndedIterator for Drain<'a, T, H>
+impl<'a, T: Default, H> DoubleEndedIterator for Drain<'a, T, H>
 where
     T: BorshSerialize + Ord + BorshDeserialize + Clone,
     H: ToKey,

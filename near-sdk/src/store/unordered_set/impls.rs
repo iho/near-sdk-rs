@@ -4,7 +4,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 
 impl<T, H> Extend<T> for UnorderedSet<T, H>
 where
-    T: BorshSerialize + Ord + BorshDeserialize + Clone,
+    T: BorshSerialize + Ord + BorshDeserialize + Clone + Default,
     H: ToKey,
 {
     fn extend<I>(&mut self, iter: I)

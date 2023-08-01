@@ -12,6 +12,7 @@ pub use entry::Entry;
 pub use iter::{Iter, IterMut, Keys, Range, RangeMut, Values, ValuesMut};
 use std::borrow::Borrow;
 use std::fmt;
+use std::io;
 use std::ops::RangeBounds;
 
 type NodeAndIndex<'a, K> = (FreeListIndex, &'a Node<K>);
@@ -71,10 +72,7 @@ where
     V: BorshSerialize,
     H: ToKey,
 {
-    fn serialize<W: borsh::maybestd::io::Write>(
-        &self,
-        writer: &mut W,
-    ) -> Result<(), borsh::maybestd::io::Error> {
+    fn serialize<W: io::Write>(&self, writer: &mut W) -> Result<(), io::Error> {
         BorshSerialize::serialize(&self.values, writer)?;
         BorshSerialize::serialize(&self.tree, writer)?;
         Ok(())
@@ -83,14 +81,14 @@ where
 
 impl<K, V, H> BorshDeserialize for TreeMap<K, V, H>
 where
-    K: BorshSerialize + Ord,
-    V: BorshSerialize,
+    K: BorshSerialize + Ord + Default + BorshDeserialize,
+    V: BorshSerialize + Default,
     H: ToKey,
 {
-    fn deserialize(buf: &mut &[u8]) -> Result<Self, borsh::maybestd::io::Error> {
+    fn deserialize_reader<R: std::io::Read>(buf: &mut R) -> Result<Self, io::Error> {
         Ok(Self {
-            values: BorshDeserialize::deserialize(buf)?,
-            tree: BorshDeserialize::deserialize(buf)?,
+            values: BorshDeserialize::deserialize_reader(buf)?,
+            tree: BorshDeserialize::deserialize_reader(buf)?,
         })
     }
 }

@@ -90,6 +90,12 @@ where
     cache: StableMap<K, EntryAndHash<V, H::KeyType>>,
 }
 
+impl<K: BorshSerialize + Ord, V: BorshSerialize, H: ToKey> Default for LookupMap<K, V, H> {
+    fn default() -> Self {
+        Self { prefix: Default::default(), cache: Default::default() }
+    }
+}
+
 struct EntryAndHash<V, T> {
     value: OnceCell<CacheEntry<V>>,
     hash: OnceCell<T>,

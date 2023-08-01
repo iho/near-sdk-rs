@@ -3,7 +3,7 @@ mod impls;
 mod iter;
 
 use std::borrow::Borrow;
-use std::{fmt, mem};
+use std::{fmt, io, mem};
 
 use borsh::{BorshDeserialize, BorshSerialize};
 
@@ -99,10 +99,7 @@ where
     V: BorshSerialize,
     H: ToKey,
 {
-    fn serialize<W: borsh::maybestd::io::Write>(
-        &self,
-        writer: &mut W,
-    ) -> Result<(), borsh::maybestd::io::Error> {
+    fn serialize<W: io::Write>(&self, writer: &mut W) -> Result<(), io::Error> {
         BorshSerialize::serialize(&self.keys, writer)?;
         BorshSerialize::serialize(&self.values, writer)?;
         Ok(())
@@ -111,15 +108,24 @@ where
 
 impl<K, V, H> BorshDeserialize for UnorderedMap<K, V, H>
 where
-    K: BorshSerialize + Ord,
-    V: BorshSerialize,
+    K: BorshDeserialize + Ord + borsh::BorshSerialize + Default,
+    V: BorshDeserialize + borsh::BorshSerialize + Default,
     H: ToKey,
 {
-    fn deserialize(buf: &mut &[u8]) -> Result<Self, borsh::maybestd::io::Error> {
+    fn deserialize_reader<R: std::io::Read>(buf: &mut R) -> Result<Self, io::Error> {
         Ok(Self {
-            keys: BorshDeserialize::deserialize(buf)?,
-            values: BorshDeserialize::deserialize(buf)?,
+            keys: BorshDeserialize::deserialize_reader(buf)?,
+            values: BorshDeserialize::deserialize_reader(buf)?,
         })
+    }
+}
+
+impl<V> Default for ValueAndIndex<V>
+where
+    V: Default,
+{
+    fn default() -> Self {
+        Self { value: V::default(), key_index: FreeListIndex(0) }
     }
 }
 

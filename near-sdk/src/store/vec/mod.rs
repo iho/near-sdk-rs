@@ -56,7 +56,7 @@ mod impls;
 mod iter;
 
 use std::{
-    fmt,
+    fmt, io,
     ops::{Bound, Range, RangeBounds},
 };
 
@@ -125,10 +125,7 @@ impl<T> BorshSerialize for Vector<T>
 where
     T: BorshSerialize,
 {
-    fn serialize<W: borsh::maybestd::io::Write>(
-        &self,
-        writer: &mut W,
-    ) -> Result<(), borsh::maybestd::io::Error> {
+    fn serialize<W: io::Write>(&self, writer: &mut W) -> Result<(), io::Error> {
         BorshSerialize::serialize(&self.len, writer)?;
         BorshSerialize::serialize(&self.values, writer)?;
         Ok(())
@@ -137,12 +134,12 @@ where
 
 impl<T> BorshDeserialize for Vector<T>
 where
-    T: BorshSerialize,
+    T: BorshSerialize + Default,
 {
-    fn deserialize(buf: &mut &[u8]) -> Result<Self, borsh::maybestd::io::Error> {
+    fn deserialize_reader<R: std::io::Read>(buf: &mut R) -> Result<Self, io::Error> {
         Ok(Self {
-            len: BorshDeserialize::deserialize(buf)?,
-            values: BorshDeserialize::deserialize(buf)?,
+            len: BorshDeserialize::deserialize_reader(buf)?,
+            values: BorshDeserialize::deserialize_reader(buf)?,
         })
     }
 }
